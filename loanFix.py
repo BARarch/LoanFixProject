@@ -136,7 +136,7 @@ subGradeDf['predictedDefault'] = m * subGradeDf['averageIntRates'] + b
 subGradeDf['dev'] = subGradeDf['predictedDefault'] - subGradeDf['defaultRate']
 
 subGradeDf.loc[subGradeDf['dev'].idxmin()], subGradeDf.loc[subGradeDf['dev'].idxmax()]
-# averageIntRates      26.874293
+#averageIntRates      26.874293
 #defaults            172.000000
 #loans               403.000000
 #defaultRate           0.426799
