@@ -1,3 +1,10 @@
+''' LoanFix.py
+    ====================================================================================================
+    This is a python component of a much larger backend system used to retrieve records in a database of loans.  Key figures and trends are discovered in the data with pandas dataframes.
+    
+    ====================================================================================================
+
+'''
 import numpy as np
 import pandas as pd
 import datetime as dt
@@ -11,39 +18,34 @@ df = df15.append(df14, ignore_index=True)
 
 
 
-# Problem 1: Median Amount
-
+# Median Amount  of all Loans in DataSet: Simple Calcuation of median loan amount issued.
 amounts = [x for x in df.loan_amnt]
 np.median(amounts)
 # 13750.0
 
 
 
-# Problem 2: Fraction of Common Purpose Loan
-
+# Fraction of Common Purpose Loan:  This script find the fraction of the most common loan use, which what empirically determined to be debt consolidation
 purposes = df.purpose.unique()
 purposeCount = {x:len(df[df.purpose == x]) for x in purposes}
-
 purposeCount['debt_consolidation']/len(df)
 # 0.5984644995462325
 
 
 
-# Problem 3: Ratio of minimum average rate to the maximum average rate
-
+# Ratio of minimum average rate to the maximum average rate
 purposeMeanInterest=[np.mean([float(str(x)[:-1]) for x in df[df.purpose == y].int_rate]) for y in purposes]
 np.min(purposeMeanInterest)/np.max(purposeMeanInterest)
 # 0.63997977670622108
 
-# Problem 4: Difference in the fraction of the loans with a 36-month term between 2014 and 2015
 
+# Difference in the fraction of the loans with a 36-month term between 2014 and 2015
 len(df15[df15.term == " 36 months"])/len(df15) - len(df14[df14.term == " 36 months"])/len(df14)
 #-0.017472334236841358
 
 
 
-# Problem 5: standard deviation of ratio of time spent in payment for all the loans in default
-
+# Standard deviation of ratio of time spent in payment for all the loans in default:  All loans in default have to be collected and datetime is then used to determine the number months between the last payment and the term of the loans.
 defaults = df[(df.loan_status != "Current") & (df.loan_status != "Fully Paid") & (df.loan_status != "In Grace Period")]
 
 def monthsCount(rds):
@@ -61,14 +63,16 @@ termInd = list(defaults.dtypes.index).index('term') + 1
 lastPaymentInd = list(defaults.dtypes.index).index('last_pymnt_d') + 1
 issuedInd = list(defaults.dtypes.index).index('issue_d') + 1
 
+# Compute list of payment/term ratios for all loans in default
 paymntRatio = [monthsBetween(default[issuedInd], default[lastPaymentInd])/termToMonths(default[termInd]) for default in defaults.itertuples()]
 
+# Compute standard deviation of list
 np.std(paymntRatio)
 # 0.19781779868425958
 
 
 
-#Problem 6: Return on to-term Loans
+# Return on to-term Loans: This is the correlation factor between rate of return and interest rate for the loans.  This value is computed for all loans that are paid to term
 toTerms = df[(df.loan_status == "Fully Paid")]
 toTerms['returnRates'] = toTerms['total_pymnt'] / toTerms['loan_amnt']
 toTerms['intRateFloat'] = pd.Series([float(val[:-1]) for val in toTerms['int_rate']], index=toTerms.index)
@@ -78,7 +82,7 @@ toTerms['returnRates'].corr(toTerms['intRateFloat'])
 
 
 
-#Problem 7: Most Surprising Loan Purpose in a State
+# Most Surprising Loan Purpose in a State: For each loan purpose we compute the probability that loan is isssued nationally and in each state.  By definition the state with the most suprizing loan purpose is the combination with the higest ratio between the state and national probabilities.  We determine vacations in the state of Hawaii are the most suprising because the probalilty of this purpose here is more than three times larger national figure.
 
 def maxRatio(probs, counts, purposes, states):
     maxRat = 0
@@ -115,7 +119,7 @@ maxRatio(statePurposeProbDf, purposeDfStates, purposes, states)
 
 
 
-#Problem 8: Linear Model for Defaults Grouped by Subgrade
+# Linear Model for Defaults Grouped by Subgrade: A new dataframe is created and converted to a matrix for linear regeression fitting useing scikit-learn.  We want to fit a linear model for the default rates of all 16 loan subgrade groups  
 
 subGrades = df['sub_grade'].unique()
 
